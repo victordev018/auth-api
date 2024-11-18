@@ -35,18 +35,14 @@ public class TokenService {
         }
     }
 
-    public String validateToken(String token) {
-        try {
-            Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
-            return JWT.require(algorithm)
-                    .withIssuer("auth-api")
-                    .build()
-                    .verify(token)
-                    .getSubject();
-        }
-        catch (JWTVerificationException exception){
-            return "";
-        }
+    public String validateToken(String token) throws JWTVerificationException {
+        Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
+        return JWT.require(algorithm)
+                .withIssuer("auth-api")
+                .build()
+                .verify(token)
+                .getSubject();
+
     }
 
     private Instant generateExpirationDate() {
