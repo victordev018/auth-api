@@ -1,5 +1,6 @@
 package com.victordev.auth_api.infra.security;
 
+import com.victordev.auth_api.infra.exception.CustomAccessDeniedHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/product").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(exception -> exception.accessDeniedHandler(new CustomAccessDeniedHandler())) // custom treatment to authorization error
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtVerificationFilter, SecurityFilter.class)
                 .build();
