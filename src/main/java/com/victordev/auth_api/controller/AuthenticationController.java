@@ -1,5 +1,6 @@
 package com.victordev.auth_api.controller;
 
+import com.victordev.auth_api.controller.exception.CustomAuthenticationException;
 import com.victordev.auth_api.domain.user.AuthenticationDTO;
 import com.victordev.auth_api.domain.user.LoginResponseDTO;
 import com.victordev.auth_api.domain.user.RegisterDTO;
@@ -10,14 +11,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.net.http.HttpResponse;
 
 @RestController
 @RequestMapping("/auth")
@@ -30,11 +31,19 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody @Valid AuthenticationDTO request) {
-        var usernamePassword = new UsernamePasswordAuthenticationToken(request.login(), request.password());
-        var auth = authenticationManager.authenticate(usernamePassword);
+        try {
+            var usernamePassword = new UsernamePasswordAuthenticationToken(request.login(), request.password());
+            var auth = authenticationManager.authenticate(usernamePassword);
 
-        var token = tokenService.generateToken((User) auth.getPrincipal());
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+            var token = tokenService.generateToken((User) auth.getPrincipal());
+            return ResponseEntity.ok(new LoginResponseDTO(token));
+        }
+        catch (BadCredentialsException exception) {
+            throw new CustomAuthenticationException("Invalid credentials. Please, check your username and password.");
+        }
+        catch (AuthenticationException exception) {
+            throw new CustomAuthenticationException("Username not found");
+        }
     }
 
     @PostMapping("/register")
